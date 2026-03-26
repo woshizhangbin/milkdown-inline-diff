@@ -1,0 +1,51 @@
+{
+  "name": "@milkdown/plugin-inline-diff",
+  "version": "0.1.0",
+  "description": "A Milkdown plugin for inline diff visualization and merge functionality",
+  "keywords": [
+    "milkdown",
+    "markdown",
+    "diff",
+    "merge",
+    "editor"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "@milkdown/core": "^7.18.0",
+    "@milkdown/ctx": "^7.18.0",
+    "@milkdown/prose": "^7.18.0"
+  },
+  "dependencies": {
+    "@milkdown/ctx": "^7.18.0",
+    "@milkdown/kit": "^7.19.2",
+    "@milkdown/prose": "^7.18.0"
+  },
+  "devDependencies": {
+    "@milkdown/core": "^7.18.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^4.0.0"
+  }
+}

@@ -1,0 +1,30 @@
+.milkdown-merge-tool-tooltip {
+    position: absolute;
+    z-index: 1000;
+    display: none;
+    padding: 8px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.milkdown-merge-tool-button-container {
+    display: flex;
+    gap: 8px;
+}
+
+.milkdown-merge-tool-button {
+    padding: 6px 12px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.milkdown-merge-tool-button.accept {
+    background-color: #52c41a;
+}
+
+.milkdown-merge-tool-button.reject {
+    background-color: #ff4d4f;
+}

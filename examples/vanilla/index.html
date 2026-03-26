@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milkdown Inline Diff Example</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+        'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+        'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .editor-wrapper {
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      min-height: 400px;
+      padding: 20px;
+      background: white;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin-right: 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    button.primary {
+      background: #1890ff;
+      color: white;
+    }
+
+    button.success {
+      background: #52c41a;
+      color: white;
+    }
+
+    button.danger {
+      background: #ff4d4f;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #fff7e6;
+      border-radius: 4px;
+      border-left: 4px solid #ffa940;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 2px;
+    }
+
+    .usage {
+      padding: 20px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+
+    .usage h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .usage code {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    .usage ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .usage li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .milkdown-merge-tool-tooltip {
+      position: absolute;
+      z-index: 1000;
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .milkdown-merge-tool-tooltip button {
+      margin-right: 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .milkdown-merge-tool-tooltip .accept-btn {
+      padding: 6px 12px;
+      background: #52c41a;
+      color: white;
+    }
+
+    .milkdown-merge-tool-tooltip .reject-btn {
+      padding: 6px 12px;
+      background: #ff4d4f;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Milkdown Inline Diff Example</h1>
+
+    <div class="controls">
+      <h2>Content</h2>
+      
+      <div class="control-group">
+        <label>Original Content:</label>
+        <textarea id="originalContent"># Original Document
+
+This is original content.
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Code Example
+
+\`\`\`javascript
+function hello() {
+  console.log('Hello, World!');
+}
+\`\`\`</textarea>
+      </div>
+
+      <div class="control-group">
+        <label>Modified Content:</label>
+        <textarea id="modifiedContent"># Modified Document
+
+This is modified content with some changes.
+
+## Features
+
+- Feature 1 (updated)
+- Feature 2
+- New Feature 3
+- Feature 4
+
+## Code Example
+
+\`\`\`javascript
+function hello() {
+  console.log('Hello, World!');
+  console.log('This is a new line');
+}
+\`\`\`</textarea>
+      </div>
+
+      <div class="control-group">
+        <button class="primary" id="compareBtn">Compare Documents</button>
+        <button class="success" id="acceptAllBtn" disabled>Accept All</button>
+        <button class="danger" id="rejectAllBtn" disabled>Reject All</button>
+      </div>
+    </div>
+
+    <div class="status">
+      <h3>Diff Status</h3>
+      <div id="statusContent">No diff active</div>
+    </div>
+
+    <div class="legend">
+      <h3>Legend</h3>
+      <div class="legend-item">
+        <div class="color-box" style="background-color: #ffccc7;"></div>
+        <span>Deleted</span>
+      </div>
+      <div class="legend-item">
+        <div class="color-box" style="background-color: #d9f7be;"></div>
+        <span>Inserted</span>
+      </div>
+      <div class="legend-item">
+        <div class="color-box" style="background-color: #fffb8f;"></div>
+        <span>Modified</span>
+      </div>
+    </div>
+
+    <div class="usage">
+      <h3>How to Use</h3>
+      <ol>
+        <li>Enter original and modified content in the textareas above</li>
+        <li>Click "Compare Documents" to see the diff</li>
+        <li>Use "Accept All" to accept all changes</li>
+        <li>Use "Reject All" to reject all changes</li>
+        <li>The plugin provides three callbacks:
+          <ul>
+            <li><code>onmerge(action, origincontent, modifiedContent, resultContent)</code> - Called when accepting or rejecting changes</li>
+            <li><code>oncomplete()</code> - Called when all changes are processed</li>
+            <li><code>onDiffStateChanged(currentIndex, count)</code> - Called when diff state changes</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <div class="editor-wrapper">
+      <div id="editor"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Editor, editorStateCtx, editorViewCtx } from 'https://cdn.jsdelivr.net/npm/@milkdown/core@7.18.0/+esm/index.js'
+    import { commonmark } from 'https://cdn.jsdelivr.net/npm/@milkdown/preset-commonmark@7.18.0/+esm/index.js'
+    import { diffViewConfig, diffViewPlugin, diff, acceptMerge, rejectMerge } from '../dist/index.js'
+
+    const originalContentEl = document.getElementById('originalContent')
+    const modifiedContentEl = document.getElementById('modifiedContent')
+    const compareBtn = document.getElementById('compareBtn')
+    const acceptAllBtn = document.getElementById('acceptAllBtn')
+    const rejectAllBtn = document.getElementById('rejectAllBtn')
+    const statusContent = document.getElementById('statusContent')
+
+    let editor = null
+    let mergeGroups = []
+
+    diffViewConfig({
+      onmerge: (action, origincontent, modifiedContent, resultContent) => {
+        console.log('Merge action:', action)
+        console.log('Origin content:', origincontent)
+        console.log('Modified content:', modifiedContent)
+        console.log('Result content:', resultContent)
+      },
+      oncomplete: () => {
+        console.log('Merge completed')
+        statusContent.textContent = 'All changes processed'
+        mergeGroups = []
+        acceptAllBtn.disabled = true
+        rejectAllBtn.disabled = true
+      },
+      onDiffStateChanged: (currentIndex, count) => {
+        console.log('Diff state changed - Current index:', currentIndex, 'Total conflicts:', count)
+        statusContent.textContent = `Conflict ${currentIndex + 1} of ${count}`
+      }
+    })
+
+    editor = new Editor()
+      .config((ctx) => {
+        ctx.set(editorStateCtx.key, ctx)
+        ctx.set(editorViewCtx.key, ctx)
+      })
+      .use(commonmark)
+      .use(diffViewPlugin)
+      .create()
+
+    const editorElement = document.getElementById('editor')
+    editorElement.appendChild(editor.root)
+
+    compareBtn.addEventListener('click', () => {
+      const original = originalContentEl.value
+      const modified = modifiedContentEl.value
+
+      if (!original || !modified) {
+        statusContent.textContent = 'Please enter both original and modified content'
+        return
+      }
+
+      editor.action((ctx) => {
+        diff(ctx, modified)
+      })
+
+      statusContent.textContent = 'Diff created successfully'
+      acceptAllBtn.disabled = false
+      rejectAllBtn.disabled = false
+    })
+
+    acceptAllBtn.addEventListener('click', () => {
+      if (mergeGroups.length === 0) {
+        statusContent.textContent = 'No merge groups to process'
+        return
+      }
+
+      mergeGroups.forEach((group, index) => {
+        editor.action((ctx) => {
+          acceptMerge(ctx, index)
+        })
+      })
+
+      statusContent.textContent = `Accepted ${mergeGroups.length} merge groups`
+    })
+
+    rejectAllBtn.addEventListener('click', () => {
+      if (mergeGroups.length === 0) {
+        statusContent.textContent = 'No merge groups to process'
+        return
+      }
+
+      mergeGroups.forEach((group, index) => {
+        editor.action((ctx) => {
+          rejectMerge(ctx, index)
+        })
+      })
+
+      statusContent.textContent = `Rejected ${mergeGroups.length} merge groups`
+    })
+  </script>
+</body>
+</html>
