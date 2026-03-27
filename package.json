@@ -1,6 +1,6 @@
 {
   "name": "@woshizhangbin33/plugin-inline-diff",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Milkdown plugin for inline diff visualization and merge functionality",
   "keywords": [
     "milkdown",
