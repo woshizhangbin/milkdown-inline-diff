@@ -17,7 +17,6 @@ It works well for:
 - `list`
 - nested `list`
 - `table`
-- extended table schemas with multiple header rows
 - `code block`
 
 ## Installation
