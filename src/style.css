@@ -1,19 +1,117 @@
+:root {
+    --diff-delete-bg: #ffccc7;
+    --diff-delete-active: #ffb4ac;
+    --diff-insert-bg: #d9f7be;
+    --diff-insert-active: #c8e8a8;
+    --diff-modify-bg: #fffb8f;
+    --diff-modify-active: #fff570;
+    --diff-accept-btn: #52c41a;
+    --diff-reject-btn: #ff4d4f;
+}
+
 .diff-decoration-delete {
-    background-color: #ffccc7;
+    background-color: var(--diff-delete-bg);
     border-radius: 2px;
     padding: 2px 4px;
 }
 
 .diff-decoration-insert {
-    background-color: #d9f7be;
+    background-color: var(--diff-insert-bg);
     border-radius: 2px;
     padding: 2px 4px;
 }
 
 .diff-decoration-modify {
-    background-color: #fffb8f;
+    background-color: var(--diff-modify-bg);
     border-radius: 2px;
     padding: 2px 4px;
+}
+
+.milkdown-code-block.diff-decoration-delete {
+    background-color: var(--diff-delete-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-delete .cm-editor {
+    background-color: var(--diff-delete-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-delete .cm-lineNumbers,
+.milkdown-code-block.diff-decoration-delete .cm-gutter {
+    background-color: var(--diff-delete-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-delete .cm-focused .cm-activeLine {
+    background-color: var(--diff-delete-active) !important;
+}
+
+.milkdown-code-block.diff-decoration-delete .cm-focused .cm-activeLineGutter {
+    background-color: var(--diff-delete-active) !important;
+}
+
+.milkdown-code-block.diff-decoration-delete .cm-activeLineGutter {
+    background-color: var(--diff-delete-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-delete .cm-activeLine {
+    background-color: var(--diff-delete-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert {
+    background-color: var(--diff-insert-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert .cm-editor {
+    background-color: var(--diff-insert-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert .cm-lineNumbers,
+.milkdown-code-block.diff-decoration-insert .cm-gutter {
+    background-color: var(--diff-insert-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert .cm-focused .cm-activeLine {
+    background-color: var(--diff-insert-active) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert .cm-focused .cm-activeLineGutter {
+    background-color: var(--diff-insert-active) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert .cm-activeLineGutter {
+    background-color: var(--diff-insert-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-insert .cm-activeLine {
+    background-color: var(--diff-insert-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify {
+    background-color: var(--diff-modify-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify .cm-editor {
+    background-color: var(--diff-modify-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify .cm-lineNumbers,
+.milkdown-code-block.diff-decoration-modify .cm-gutter {
+    background-color: var(--diff-modify-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify .cm-focused .cm-activeLine {
+    background-color: var(--diff-modify-active) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify .cm-focused .cm-activeLineGutter {
+    background-color: var(--diff-modify-active) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify .cm-activeLineGutter {
+    background-color: var(--diff-modify-bg) !important;
+}
+
+.milkdown-code-block.diff-decoration-modify .cm-activeLine {
+    background-color: var(--diff-modify-bg) !important;
 }
 
 .milkdown-merge-tool-tooltip {
@@ -46,9 +144,9 @@
 }
 
 .milkdown-merge-tool-button.accept {
-    background: #52c41a;
+    background: var(--diff-accept-btn);
 }
 
 .milkdown-merge-tool-button.reject {
-    background: #ff4d4f;
+    background: var(--diff-reject-btn);
 }

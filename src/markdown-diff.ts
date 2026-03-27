@@ -143,9 +143,52 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
   const blocksA = extractBlocks(docA);
   const blocksB = extractBlocks(docB);
 
+  console.log(
+    "blocksA:",
+    JSON.stringify(
+      blocksA.map((b) => ({
+        type: b.nodes[b.nodes.length - 1].type.name,
+        content: b.nodes[b.nodes.length - 1].textContent?.substring(0, 50),
+      })),
+      null,
+      2,
+    ),
+  );
+
+  console.log(
+    "blocksB:",
+    JSON.stringify(
+      blocksB.map((b) => ({
+        type: b.nodes[b.nodes.length - 1].type.name,
+        content: b.nodes[b.nodes.length - 1].textContent?.substring(0, 50),
+      })),
+      null,
+      2,
+    ),
+  );
+
   let changes: BlockChange[] = [];
 
   const diffResult = myersDiff(blocksA, blocksB, blockEqual);
+
+  console.log(
+    "diffResult:",
+    JSON.stringify(
+      diffResult.map((op) => ({
+        type: op.type,
+        count: op.items.length,
+        items: op.items.map((item) => ({
+          type: item.nodes[item.nodes.length - 1].type.name,
+          content: item.nodes[item.nodes.length - 1].textContent?.substring(
+            0,
+            50,
+          ),
+        })),
+      })),
+      null,
+      2,
+    ),
+  );
 
   for (const op of diffResult) {
     switch (op.type) {
@@ -593,6 +636,7 @@ export function createDiffEditState(
   schema: Schema,
 ): DiffEditState {
   const changes = blockDiff(originalDoc, modifiedDoc);
+  console.log("blockDiff result:", JSON.stringify(changes, null, 2));
   const { root, mergeGroups } = buildVNode(changes);
   const mergedDoc = buildNodeFromVNode(root, schema);
 

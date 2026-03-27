@@ -50,6 +50,8 @@ This sample focuses on block-aware diff instead of plain text patches. Each chan
 - API shape
   - Plugin array
   - Config helper
+- Rendering details
+  - Code block styling in Crepe
 - Block coverage
   - Heading
   - Paragraph
@@ -57,12 +59,19 @@ This sample focuses on block-aware diff instead of plain text patches. Each chan
   - Nested list
   - Table
 
+## Code Block Coverage
+
+~~~ts
+editor.use(diffPlugins).config(diffConfig({ ... }));
+~~~
+
 ## Table Diff Coverage
 
 | Block Type | Notes |
 | --- | --- |
 | Heading | Section titles can be reviewed as single blocks |
 | Paragraph | Intro and summary copy can be merged independently |
+| Code Block | Code blocks are diffed as code blocks |
 | Blockquote | Nested quote content stays grouped |
 | List | Nested ordered and unordered items remain structured |
 | Table | Header and row changes stay in table form |
@@ -107,6 +116,8 @@ This sample highlights block-aware diff instead of plain text patches. Each chan
   - Plugin array
   - Config helper
   - Auto diff on initial content
+- Rendering details
+  - Code block diff decoration
 - Block coverage
   - Heading
   - Paragraph
@@ -114,12 +125,21 @@ This sample highlights block-aware diff instead of plain text patches. Each chan
   - Nested list
   - Table with extended header support
 
+## Code Block Coverage
+
+~~~ts
+editor
+  .use(diffPlugins)
+  .config(diffConfig({ originContent, modifiedContent }));
+~~~
+
 ## Table Diff Coverage
 
 | Block Type | Notes |
 | --- | --- |
 | Heading | Document and section titles can be reviewed as single blocks |
 | Paragraph | Narrative copy can be merged block by block |
+| Code Block | Code blocks are diffed as code blocks |
 | Blockquote | Nested quote content stays grouped for review |
 | List | Nested ordered and unordered items keep their hierarchy |
 | Table | Header changes, row changes, and extended table schemas remain table-shaped |
