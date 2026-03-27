@@ -22,3 +22,6 @@ Thumbs.db
 examples/*/node_modules
 examples/*/dist
 examples/*/.vite
+
+# NPM
+.npmrc

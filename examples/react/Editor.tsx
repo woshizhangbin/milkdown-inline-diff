@@ -8,11 +8,11 @@ import {
   getDiffState,
   jumpTo,
   merge,
-} from "@milkdown/plugin-inline-diff";
+} from "@woshizhangbin33/plugin-inline-diff";
 
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import "@milkdown/plugin-inline-diff/style.css";
+import "@woshizhangbin33/plugin-inline-diff/style.css";
 import { MergeBar } from "./MergeBar";
 
 import originMarkdown from "./origin.md?raw";
