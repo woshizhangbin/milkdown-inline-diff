@@ -1,14 +1,21 @@
-import { type Ctx, type MilkdownPlugin } from "@milkdown/ctx";
+import type { Ctx, MilkdownPlugin } from "@milkdown/ctx";
 import { tooltipFactory, TooltipProvider } from "@milkdown/kit/plugin/tooltip";
+import { $ctx } from "@milkdown/kit/utils";
 import type { EditorState, PluginView } from "@milkdown/prose/state";
 import type { EditorView } from "@milkdown/prose/view";
 import { Decoration } from "@milkdown/prose/view";
 
 import { debounce } from "lodash";
 
+import { defaultDiffConfig, diffConfigCtx } from "./diff-config";
 import { getDiffDecorations, merge } from "./markdown-diff";
 
-export const diffToolTooltip = tooltipFactory("DIFF_TOOLTIP");
+export const onMergeCtx = $ctx<
+  ((action: "accept" | "reject", index: number) => void) | undefined,
+  "onMergeCtx"
+>(undefined, "onMergeCtx");
+
+export const diffToolTooltip = tooltipFactory("MERGE_TOOL");
 
 export class DiffTooltipView implements PluginView {
   private tooltipProvider: TooltipProvider;
@@ -17,58 +24,60 @@ export class DiffTooltipView implements PluginView {
   private currentGroupIndex?: number;
   private currentPos?: number;
   private currentDisplayPos?: number;
-  private scrollContainer: Element | null = null;
+  private scrollTarget: EventTarget | null = null;
 
   tooltipElement: HTMLDivElement;
   acceptButton: HTMLButtonElement;
   rejectButton: HTMLButtonElement;
 
-  constructor(
-    private ctx: Ctx,
-    private editView: EditorView,
-    private callback: (action: "accept" | "reject", index: number) => void,
-  ) {
+  constructor(private ctx: Ctx, private editView: EditorView) {
     this.tooltipElement = document.createElement("div");
     this.tooltipElement.className = "milkdown-merge-tool-tooltip";
 
     const buttonContainer = document.createElement("div");
     buttonContainer.className = "milkdown-merge-tool-button-container";
 
+    const config = ctx.get(diffConfigCtx.key);
+    const acceptButtonTitle =
+      config.acceptButtonTitle ?? defaultDiffConfig.acceptButtonTitle ?? "Accept";
+    const rejectButtonTitle =
+      config.rejectButtonTitle ?? defaultDiffConfig.rejectButtonTitle ?? "Reject";
+
     this.acceptButton = document.createElement("button");
-    this.acceptButton.textContent = "Accept";
+    this.acceptButton.textContent = acceptButtonTitle;
     this.acceptButton.className = "milkdown-merge-tool-button accept";
     this.acceptButton.addEventListener("click", () => this.handleAccept());
 
     this.rejectButton = document.createElement("button");
-    this.rejectButton.textContent = "Reject";
+    this.rejectButton.textContent = rejectButtonTitle;
     this.rejectButton.className = "milkdown-merge-tool-button reject";
     this.rejectButton.addEventListener("click", () => this.handleReject());
 
-    buttonContainer.appendChild(this.acceptButton);
     buttonContainer.appendChild(this.rejectButton);
+    buttonContainer.appendChild(this.acceptButton);
     this.tooltipElement.appendChild(buttonContainer);
-
-    const container = editView.dom.parentElement ?? document.body;
-    container.appendChild(this.tooltipElement);
 
     this.tooltipProvider = new TooltipProvider({
       content: this.tooltipElement,
       offset: -2,
       shouldShow: (_view: EditorView) => false,
       floatingUIOptions: {
-        placement: "top-end", // default placement: top center
+        placement: "top-end",
       },
     });
 
-    const milkdownContainer = container.closest(".markdown-scroll-container");
-    this.scrollContainer = milkdownContainer || container;
+    const container = editView.dom.parentElement ?? document.body;
+    container.appendChild(this.tooltipElement);
 
-    if (this.scrollContainer) {
-      this.scrollContainer.addEventListener("scroll", this.handleScroll);
+    const scrollContext = findScrollContainer(editView.dom);
+    this.scrollTarget = scrollContext.target;
+
+    if (this.scrollTarget) {
+      this.scrollTarget.addEventListener("scroll", this.handleScroll);
     }
   }
 
-  handleScroll() {
+  handleScroll = () => {
     if (this.shouldShow && this.currentDisplayPos !== undefined) {
       updateTooltipForPos(
         this,
@@ -77,15 +86,17 @@ export class DiffTooltipView implements PluginView {
         this.currentDisplayPos,
       );
     }
-  }
+  };
 
   handleAccept(): void {
-    this.callback("accept", this.currentGroupIndex!);
+    const callback = this.ctx.get(onMergeCtx.key);
+    callback?.("accept", this.currentGroupIndex!);
     this.hideImmediate();
   }
 
   handleReject(): void {
-    this.callback("reject", this.currentGroupIndex!);
+    const callback = this.ctx.get(onMergeCtx.key);
+    callback?.("reject", this.currentGroupIndex!);
     this.hideImmediate();
   }
 
@@ -138,19 +149,30 @@ export class DiffTooltipView implements PluginView {
   }
 
   destroy = () => {
-    if (this.scrollContainer) {
-      this.scrollContainer.removeEventListener("scroll", this.handleScroll);
+    if (this.scrollTarget) {
+      this.scrollTarget.removeEventListener("scroll", this.handleScroll);
     }
     this.tooltipProvider.destroy();
     this.tooltipElement.remove();
   };
 }
 
-export const tooltipViewPlugin: MilkdownPlugin = (ctx) => {
-  const onMerge = (action: "accept" | "reject", index: number) => {
-    merge(ctx, action, index, false);
-  };
+const mergeToolPlugin: MilkdownPlugin = (ctx) => {
+  ctx.inject(onMergeCtx.key);
 
+  return async () => {
+    return () => {
+      ctx.remove(onMergeCtx.key);
+    };
+  };
+};
+
+export const diffTooltipPlugins: MilkdownPlugin[] = [
+  mergeToolPlugin,
+  ...diffToolTooltip,
+];
+
+export const tooltipViewConfig = (ctx: Ctx) => {
   let tooltipView: DiffTooltipView | null = null;
 
   const onMouseMove = debounce((view: EditorView, event: MouseEvent) => {
@@ -165,6 +187,10 @@ export const tooltipViewPlugin: MilkdownPlugin = (ctx) => {
     updateTooltipForPos(tooltipView, ctx, view, pos);
   }, 0);
 
+  ctx.set(onMergeCtx.key, (action, index) => {
+    merge(ctx, action, index, false);
+  });
+
   ctx.set(diffToolTooltip.key, {
     props: {
       handleDOMEvents: {
@@ -172,15 +198,60 @@ export const tooltipViewPlugin: MilkdownPlugin = (ctx) => {
       },
     },
     view: (view) => {
-      tooltipView = new DiffTooltipView(ctx, view, onMerge);
+      tooltipView = new DiffTooltipView(ctx, view);
       return tooltipView;
     },
   });
-  return async () => {};
 };
+
 function mouseToPos(view: EditorView, event: MouseEvent): number | undefined {
   const $pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
   return $pos?.pos;
+}
+
+function isScrollableElement(element: HTMLElement): boolean {
+  const style = window.getComputedStyle(element);
+  const overflowY = style.overflowY;
+  const overflowX = style.overflowX;
+  const overflow = style.overflow;
+  const canScrollY =
+    /(auto|scroll|overlay)/.test(overflowY) ||
+    /(auto|scroll|overlay)/.test(overflow);
+  const canScrollX =
+    /(auto|scroll|overlay)/.test(overflowX) ||
+    /(auto|scroll|overlay)/.test(overflow);
+
+  return (
+    (canScrollY && element.scrollHeight > element.clientHeight) ||
+    (canScrollX && element.scrollWidth > element.clientWidth)
+  );
+}
+
+function findScrollContainer(start: HTMLElement): {
+  element: HTMLElement | null;
+  target: EventTarget | null;
+} {
+  let current: HTMLElement | null = start.parentElement;
+
+  while (current) {
+    if (isScrollableElement(current)) {
+      return {
+        element: current,
+        target: current,
+      };
+    }
+    current = current.parentElement;
+  }
+
+  const scrollingElement =
+    document.scrollingElement instanceof HTMLElement
+      ? document.scrollingElement
+      : document.documentElement;
+
+  return {
+    element: scrollingElement,
+    target: window,
+  };
 }
 
 export function shouldShowMergeToolForPos(
@@ -189,20 +260,20 @@ export function shouldShowMergeToolForPos(
 ): { index: number; decoration: Decoration } | undefined {
   const diffDecorations = getDiffDecorations(ctx);
 
-  let index = diffDecorations.findIndex((dec) => {
-    let all = [...dec.delete, ...dec.insert];
-    let start = all[0].from;
-    let end = all[all.length - 1].to;
+  const index = diffDecorations.findIndex((dec) => {
+    const all = [...dec.delete, ...dec.insert];
+    const start = all[0].from;
+    const end = all[all.length - 1].to;
     return start <= pos && pos <= end;
   });
 
   if (index >= 0) {
-    let group = diffDecorations[index];
-    let decoration = group.delete[0] || group.insert[0];
+    const group = diffDecorations[index];
+    const decoration = group.delete[0] || group.insert[0];
     return { index, decoration };
-  } else {
-    return undefined;
   }
+
+  return undefined;
 }
 
 function updateTooltipForPos(
@@ -211,6 +282,12 @@ function updateTooltipForPos(
   view: EditorView,
   pos: number,
 ): void {
+  const diffDecorations = getDiffDecorations(ctx);
+  if (diffDecorations.length === 0) {
+    tooltipView.hideImmediate();
+    return;
+  }
+
   const result = shouldShowMergeToolForPos(ctx, pos);
 
   if (result) {

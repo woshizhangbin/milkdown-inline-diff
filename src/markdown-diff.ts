@@ -700,7 +700,7 @@ function markNodesToDelete(
 
     const processedNodes = new Set<any>();
 
-    treeRoot.node.descendants((node: any, pos: number, parent: any) => {
+    treeRoot.node.descendants((node: any, pos: number, _parent: any) => {
       const nodeEnd = pos + node.nodeSize;
 
       if (!processedNodes.has(node)) {
@@ -927,7 +927,11 @@ export function jumpTo(ctx: Ctx, index: number) {
   });
 }
 
-export function diff(ctx: Ctx, newContent: string): void {
+export function diff(
+  ctx: Ctx,
+  newContent: string,
+  originContent?: string,
+): void {
   const view = ctx.get(editorViewCtx);
   if (!view) {
     console.warn("Editor view not found.");
@@ -935,8 +939,10 @@ export function diff(ctx: Ctx, newContent: string): void {
   }
 
   const editorState = view.state;
-
-  const currentDoc = editorState.doc;
+  const currentDoc =
+    originContent === undefined
+      ? editorState.doc
+      : ctx.get(parserCtx)(originContent);
   const schema = editorState.schema;
 
   const modifiedDoc = ctx.get(parserCtx)(newContent);

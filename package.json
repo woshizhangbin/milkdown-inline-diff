@@ -20,7 +20,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./style.css": "./src/style.css"
   },
   "files": [
     "dist",
@@ -35,15 +36,20 @@
   "peerDependencies": {
     "@milkdown/core": "^7.18.0",
     "@milkdown/ctx": "^7.18.0",
+    "@milkdown/preset-gfm": "^7.18.0",
     "@milkdown/prose": "^7.18.0"
   },
   "dependencies": {
+    "@milkdown/crepe": "^7.19.2",
     "@milkdown/ctx": "^7.18.0",
     "@milkdown/kit": "^7.19.2",
-    "@milkdown/prose": "^7.18.0"
+    "@milkdown/prose": "^7.18.0",
+    "@milkdown/react": "^7.19.2",
+    "@prosemirror-adapter/react": "^0.5.2"
   },
   "devDependencies": {
     "@milkdown/core": "^7.18.0",
+    "@milkdown/preset-gfm": "^7.18.0",
     "typescript": "^5.9.3",
     "vite": "^5.0.0",
     "vite-plugin-dts": "^4.0.0"

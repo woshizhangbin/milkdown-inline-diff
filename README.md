@@ -1,235 +1,207 @@
 # @milkdown/plugin-inline-diff
 
-A Milkdown plugin for inline diff visualization and merge functionality.
+Block-level Markdown diff and merge controls for Milkdown editors.
+
+![milkdown-inline-diff demo](./docs/demo-page.png)
+
+## Overview
+
+`@milkdown/plugin-inline-diff` compares Markdown documents as block structures instead of raw text lines. It is designed for in-editor review flows where users need to inspect and merge changes without leaving the editor.
+
+It works well for:
+
+- `heading`
+- `paragraph`
+- `blockquote`
+- nested `blockquote`
+- `list`
+- nested `list`
+- `table`
+- extended table schemas with multiple header rows
 
 ## Installation
-
-```bash
-npm install @milkdown/plugin-inline-diff
-```
-
-or
-
-```bash
-yarn add @milkdown/plugin-inline-diff
-```
-
-or
 
 ```bash
 pnpm add @milkdown/plugin-inline-diff
 ```
 
+You also need the normal Milkdown editor dependencies used by your app.
+
 ## Quick Start
 
-```typescript
-import { Editor, rootCtx } from '@milkdown/core'
-import { commonmark } from '@milkdown/preset-commonmark'
-import { createDiffEditState } from '@milkdown/plugin-inline-diff'
+```ts
+import { Editor } from "@milkdown/core";
+import { commonmark } from "@milkdown/preset-commonmark";
+import {
+  diffConfig,
+  diffPlugins,
+} from "@milkdown/plugin-inline-diff";
+import "@milkdown/plugin-inline-diff/style.css";
 
-const editor = new Editor()
-  .config((ctx) => {
-    ctx.get(rootCtx)
-  })
+const editor = Editor.make()
   .use(commonmark)
-  .create()
+  .use(diffPlugins)
+  .config(
+    diffConfig({
+      acceptButtonTitle: "Accept Change",
+      rejectButtonTitle: "Keep Original",
+      originContent: "# Original",
+      modifiedContent: "# Modified",
+    }),
+  );
 
-const originalDoc = editor.state.doc
-const modifiedDoc = editor.state.doc
-
-const diffState = createDiffEditState(
-  originalDoc,
-  modifiedDoc,
-  editor.state.doc.type.schema
-)
-
-console.log('Merged document:', diffState.mergedDoc)
-console.log('Decorations:', diffState.decorations)
-console.log('Merge groups:', diffState.mergeGroups)
+await editor.create();
 ```
 
-## Features
+If both `originContent` and `modifiedContent` are provided, the plugin will automatically enter diff mode after the editor view is ready.
 
-- **Block-level diff**: Compare documents at block level for better accuracy
-- **Merge visualization**: Visualize changes with colored decorations
-- **Special handling**: Smart handling for tables, lists, and other complex structures
-- **Framework agnostic**: Works with any UI framework (React, Vue, vanilla JS, etc.)
+## Public API
 
-## API
+### `diffPlugins`
 
-### `diffViewConfig(config)`
+Milkdown plugin array used with:
 
-Configures the merge view with callback functions.
+```ts
+editor.use(diffPlugins);
+```
 
-**Parameters:**
-- `config` (MergeConfig): Configuration object
+### `diffConfig(options)`
 
-**Returns:**
-- Milkdown slice with configuration
+Configuration helper used with:
 
-**MergeConfig interface:**
-```typescript
-interface MergeConfig {
-  onmerge: (action: 'accept' | 'reject', origincontent: string, modifiedContent: string, resultContent: string) => void
-  oncomplete: () => void
-  onDiffStateChanged: (currentIndex: number, count: number) => void
+```ts
+editor.config(diffConfig({ ... }));
+```
+
+```ts
+interface DiffConfig {
+  acceptButtonTitle?: string;
+  rejectButtonTitle?: string;
+  originContent?: string;
+  modifiedContent?: string;
 }
 ```
 
-**Example:**
-```typescript
-import { diffViewConfig } from '@milkdown/plugin-inline-diff'
+### `diff(ctx, modifiedContent, originContent?)`
 
-diffViewConfig({
-  onmerge: (action, origincontent, modifiedContent, resultContent) => {
-    console.log('Merge action:', action)
-    console.log('Origin content:', origincontent)
-    console.log('Modified content:', modifiedContent)
-    console.log('Result content:', resultContent)
-  },
-  oncomplete: () => {
-    console.log('Merge completed')
-  },
-  onDiffStateChanged: (currentIndex, count) => {
-    console.log('Current diff index:', currentIndex)
-    console.log('Total conflicts:', count)
-  }
-})
+Enters diff mode on demand.
+
+```ts
+editor.action((ctx) => {
+  diff(ctx, modifiedContent, originContent);
+});
 ```
 
-### `diffViewPlugin()`
+Use this when you want to trigger comparison after editor creation, after loading remote content, or after switching between document versions.
 
-Milkdown plugin that injects merge view functionality.
+### `jumpTo(ctx, index)`
 
-**Returns:**
-- Milkdown plugin
+Moves focus to a specific diff group.
 
-**Example:**
-```typescript
-import { Editor, rootCtx } from '@milkdown/core'
-import { diffViewPlugin } from '@milkdown/plugin-inline-diff'
-
-const editor = new Editor()
-  .config((ctx) => {
-    ctx.get(rootCtx)
-  })
-  .use(diffViewPlugin())
-  .create()
+```ts
+editor.action((ctx) => {
+  jumpTo(ctx, 0);
+});
 ```
 
-### `diff(ctx, newContent)`
+This is useful for custom navigation bars, side panels, or review workflows.
 
-Compares current editor content with new content and creates diff visualization.
+### `merge(ctx, action, index, all?)`
 
-**Parameters:**
-- `ctx` (Ctx): Milkdown context
-- `newContent` (string): New content to compare
+Accepts or rejects a diff group, or resolves all groups at once.
 
-**Example:**
-```typescript
-import { diff } from '@milkdown/plugin-inline-diff'
+```ts
+editor.action((ctx) => {
+  merge(ctx, "accept", 0);
+});
 
 editor.action((ctx) => {
-  diff(ctx, newContent)
-})
+  merge(ctx, "reject", 0, true);
+});
 ```
 
-### `acceptMerge(ctx, index)`
+### `getDiffState(ctx)`
 
-Accepts a merge group at the specified index.
+Returns the current diff state for external UI.
 
-**Parameters:**
-- `ctx` (Ctx): Milkdown context
-- `index` (number): Index of the merge group to accept
+```ts
+const state = editor.action((ctx) => getDiffState(ctx));
+```
 
-### `rejectMerge(ctx, index)`
+The returned state includes:
 
-Rejects a merge group at the specified index.
+- `count`: total number of diff groups
+- `currentIndex`: current focused diff group index, or `-1` before the first group
 
-**Parameters:**
-- `ctx` (Ctx): Milkdown context
-- `index` (number): Index of the merge group to reject
+This is the function to use when building your own merge bar, status panel, or conflict navigator.
 
-### `createDiffEditState(originalDoc, modifiedDoc, schema)`
+## Typical Review Flow
 
-Creates a diff state comparing two documents.
+```ts
+editor.use(diffPlugins).config(
+  diffConfig({
+    acceptButtonTitle: "Accept Change",
+    rejectButtonTitle: "Keep Original",
+  }),
+);
 
-**Parameters:**
-- `originalDoc` (Node): The original document
-- `modifiedDoc` (Node): The modified document
-- `schema` (Schema): The ProseMirror schema
+editor.action((ctx) => {
+  diff(ctx, modifiedMarkdown, originMarkdown);
+});
 
-**Returns:**
-- `DiffEditState`: Object containing merged document, decorations, and merge groups
+const state = editor.action((ctx) => getDiffState(ctx));
 
-### `getDecorationClass(type)`
+editor.action((ctx) => {
+  jumpTo(ctx, state.currentIndex + 1);
+});
 
-Returns CSS class name for a given change type.
+editor.action((ctx) => {
+  merge(ctx, "accept", state.currentIndex);
+});
+```
 
-**Parameters:**
-- `type` ('delete' | 'insert' | 'modify'): The change type
+## Listening For Changes
 
-**Returns:**
-- `string`: The CSS class name
+If you want to keep external UI in sync with the editor, listen to Milkdown or Crepe update events and read diff state inside the callback.
 
-### `blockDiff(docA, docB)`
+```ts
+const syncDiffState = () => {
+  const state = editor.action((ctx) => getDiffState(ctx));
+  setDiffState(state);
+};
 
-Computes block-level differences between two documents.
+crepe.on((listener) => {
+  listener.mounted(syncDiffState);
+  listener.updated(syncDiffState);
+  listener.selectionUpdated(syncDiffState);
+});
+```
 
-**Parameters:**
-- `docA` (Node): The first document
-- `docB` (Node): The second document
+This pattern is used in the React demo to drive the custom merge bar.
 
-**Returns:**
-- `BlockChange[]`: Array of block changes
+## Demo
 
-### `getMergeGroups(ctx)`
+The repository includes a runnable React demo in [examples/react](/Users/binzhang/Documents/falcon/milkdown-inline-diff/examples/react).
 
-Gets all merge groups from the current diff decorations.
+It demonstrates:
 
-**Parameters:**
-- `ctx` (Ctx): Milkdown context
-
-**Returns:**
-- `MergeGroup[]`: Array of merge groups
-
-### `calculateMergeGroupRange(ctx, groupIndex)`
-
-Calculates the range of a merge group.
-
-**Parameters:**
-- `ctx` (Ctx): Milkdown context
-- `groupIndex` (number): Index of the merge group
-
-**Returns:**
-- `MergeGroupRange | undefined`: Range information or undefined
+- `editor.use(diffPlugins).config(diffConfig(...))`
+- automatic diff on initial content
+- custom tooltip button titles
+- custom merge bar UI driven by `getDiffState(ctx)`
+- `jumpTo` navigation
+- `merge(..., all)` bulk actions
 
 ## Styling
 
-The plugin uses the following CSS classes for decorations:
+Import the plugin stylesheet once:
 
-```css
-.diff-decoration-delete {
-  background-color: #ffccc7;
-}
-
-.diff-decoration-insert {
-  background-color: #d9f7be;
-}
-
-.diff-decoration-modify {
-  background-color: #fffb8f;
-}
+```ts
+import "@milkdown/plugin-inline-diff/style.css";
 ```
 
-## Example
-
-See `examples/vanilla` directory for a complete vanilla JavaScript example.
+You can then override the tooltip and review UI styles in your app theme if needed.
 
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
