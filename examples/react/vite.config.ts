@@ -29,6 +29,10 @@ export default defineConfig({
       "vue",
     ],
   },
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+  },
   server: {
     port: 3001,
     open: true,

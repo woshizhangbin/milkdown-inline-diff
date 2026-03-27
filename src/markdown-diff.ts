@@ -143,12 +143,15 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
   const blocksA = extractBlocks(docA);
   const blocksB = extractBlocks(docB);
 
+  console.log("=== blockDiff called ===");
   console.log(
     "blocksA:",
     JSON.stringify(
-      blocksA.map((b) => ({
+      blocksA.map((b, idx) => ({
+        index: idx,
         type: b.nodes[b.nodes.length - 1].type.name,
         content: b.nodes[b.nodes.length - 1].textContent?.substring(0, 50),
+        nodesPath: b.nodes.map((n) => n.type.name).join(" > "),
       })),
       null,
       2,
@@ -158,9 +161,11 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
   console.log(
     "blocksB:",
     JSON.stringify(
-      blocksB.map((b) => ({
+      blocksB.map((b, idx) => ({
+        index: idx,
         type: b.nodes[b.nodes.length - 1].type.name,
         content: b.nodes[b.nodes.length - 1].textContent?.substring(0, 50),
+        nodesPath: b.nodes.map((n) => n.type.name).join(" > "),
       })),
       null,
       2,
@@ -174,15 +179,18 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
   console.log(
     "diffResult:",
     JSON.stringify(
-      diffResult.map((op) => ({
+      diffResult.map((op, opIdx) => ({
+        opIndex: opIdx,
         type: op.type,
         count: op.items.length,
-        items: op.items.map((item) => ({
+        items: op.items.map((item, itemIdx) => ({
+          itemIndex: itemIdx,
           type: item.nodes[item.nodes.length - 1].type.name,
           content: item.nodes[item.nodes.length - 1].textContent?.substring(
             0,
             50,
           ),
+          nodesPath: item.nodes.map((n) => n.type.name).join(" > "),
         })),
       })),
       null,
@@ -194,29 +202,74 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
     switch (op.type) {
       case "equal":
         for (let i = 0; i < op.items.length; i++) {
-          changes.push({
+          const change: BlockChange = {
             type: "unchanged",
             A: op.items[i],
             B: op.items[i],
-          });
+          };
+
+          const node = change.A?.nodes[change.A.nodes.length - 1];
+          if (
+            node?.type.name === "table_row" ||
+            node?.type.name === "table_header_row"
+          ) {
+            console.log(
+              "Creating unchanged table row change:",
+              node.type.name,
+              "content:",
+              node.textContent?.substring(0, 30),
+            );
+          }
+
+          changes.push(change);
         }
         break;
       case "delete":
         for (const block of op.items) {
-          changes.push({
+          const change: BlockChange = {
             type: "delete",
             A: block,
             B: null,
-          });
+          };
+
+          const node = change.A?.nodes[change.A.nodes.length - 1];
+          if (
+            node?.type.name === "table_row" ||
+            node?.type.name === "table_header_row"
+          ) {
+            console.log(
+              "Creating delete table row change:",
+              node.type.name,
+              "content:",
+              node.textContent?.substring(0, 30),
+            );
+          }
+
+          changes.push(change);
         }
         break;
       case "insert":
         for (const block of op.items) {
-          changes.push({
+          const change: BlockChange = {
             type: "insert",
             A: null,
             B: block,
-          });
+          };
+
+          const node = change.B?.nodes[change.B.nodes.length - 1];
+          if (
+            node?.type.name === "table_row" ||
+            node?.type.name === "table_header_row"
+          ) {
+            console.log(
+              "Creating insert table row change:",
+              node.type.name,
+              "content:",
+              node.textContent?.substring(0, 30),
+            );
+          }
+
+          changes.push(change);
         }
         break;
     }
@@ -227,9 +280,10 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
 }
 
 function isTableRowChange(change: BlockChange): boolean {
-  const node =
-    change.A?.nodes[change.A.nodes.length - 1] ??
-    change.B?.nodes[change.B.nodes.length - 1];
+  const nodeA = change.A?.nodes[change.A.nodes.length - 1];
+  const nodeB = change.B?.nodes[change.B.nodes.length - 1];
+  const node = nodeA ?? nodeB;
+
   return (
     node?.type.name === "table_row" || node?.type.name === "table_header_row"
   );
@@ -322,10 +376,25 @@ function sortTableRows(changes: BlockChange[]): BlockChange[] {
     }
 
     const sortedGroup = sortByColumnCount(group);
+
     result.push(...sortedGroup);
 
     i = j;
   }
+
+  console.log(
+    "sortTableRows output:",
+    JSON.stringify(
+      result.map((c) => ({
+        type: c.type,
+        content:
+          c.A?.nodes[c.A.nodes.length - 1].textContent?.substring(0, 30) ||
+          c.B?.nodes[c.B.nodes.length - 1].textContent?.substring(0, 30),
+      })),
+      null,
+      2,
+    ),
+  );
 
   return result;
 }
