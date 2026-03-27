@@ -143,60 +143,9 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
   const blocksA = extractBlocks(docA);
   const blocksB = extractBlocks(docB);
 
-  console.log("=== blockDiff called ===");
-  console.log(
-    "blocksA:",
-    JSON.stringify(
-      blocksA.map((b, idx) => ({
-        index: idx,
-        type: b.nodes[b.nodes.length - 1].type.name,
-        content: b.nodes[b.nodes.length - 1].textContent?.substring(0, 50),
-        nodesPath: b.nodes.map((n) => n.type.name).join(" > "),
-      })),
-      null,
-      2,
-    ),
-  );
-
-  console.log(
-    "blocksB:",
-    JSON.stringify(
-      blocksB.map((b, idx) => ({
-        index: idx,
-        type: b.nodes[b.nodes.length - 1].type.name,
-        content: b.nodes[b.nodes.length - 1].textContent?.substring(0, 50),
-        nodesPath: b.nodes.map((n) => n.type.name).join(" > "),
-      })),
-      null,
-      2,
-    ),
-  );
-
   let changes: BlockChange[] = [];
 
   const diffResult = myersDiff(blocksA, blocksB, blockEqual);
-
-  console.log(
-    "diffResult:",
-    JSON.stringify(
-      diffResult.map((op, opIdx) => ({
-        opIndex: opIdx,
-        type: op.type,
-        count: op.items.length,
-        items: op.items.map((item, itemIdx) => ({
-          itemIndex: itemIdx,
-          type: item.nodes[item.nodes.length - 1].type.name,
-          content: item.nodes[item.nodes.length - 1].textContent?.substring(
-            0,
-            50,
-          ),
-          nodesPath: item.nodes.map((n) => n.type.name).join(" > "),
-        })),
-      })),
-      null,
-      2,
-    ),
-  );
 
   for (const op of diffResult) {
     switch (op.type) {
@@ -207,19 +156,6 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
             A: op.items[i],
             B: op.items[i],
           };
-
-          const node = change.A?.nodes[change.A.nodes.length - 1];
-          if (
-            node?.type.name === "table_row" ||
-            node?.type.name === "table_header_row"
-          ) {
-            console.log(
-              "Creating unchanged table row change:",
-              node.type.name,
-              "content:",
-              node.textContent?.substring(0, 30),
-            );
-          }
 
           changes.push(change);
         }
@@ -232,19 +168,6 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
             B: null,
           };
 
-          const node = change.A?.nodes[change.A.nodes.length - 1];
-          if (
-            node?.type.name === "table_row" ||
-            node?.type.name === "table_header_row"
-          ) {
-            console.log(
-              "Creating delete table row change:",
-              node.type.name,
-              "content:",
-              node.textContent?.substring(0, 30),
-            );
-          }
-
           changes.push(change);
         }
         break;
@@ -255,19 +178,6 @@ export function blockDiff(docA: Node, docB: Node): BlockChange[] {
             A: null,
             B: block,
           };
-
-          const node = change.B?.nodes[change.B.nodes.length - 1];
-          if (
-            node?.type.name === "table_row" ||
-            node?.type.name === "table_header_row"
-          ) {
-            console.log(
-              "Creating insert table row change:",
-              node.type.name,
-              "content:",
-              node.textContent?.substring(0, 30),
-            );
-          }
 
           changes.push(change);
         }
@@ -381,20 +291,6 @@ function sortTableRows(changes: BlockChange[]): BlockChange[] {
 
     i = j;
   }
-
-  console.log(
-    "sortTableRows output:",
-    JSON.stringify(
-      result.map((c) => ({
-        type: c.type,
-        content:
-          c.A?.nodes[c.A.nodes.length - 1].textContent?.substring(0, 30) ||
-          c.B?.nodes[c.B.nodes.length - 1].textContent?.substring(0, 30),
-      })),
-      null,
-      2,
-    ),
-  );
 
   return result;
 }
@@ -705,7 +601,6 @@ export function createDiffEditState(
   schema: Schema,
 ): DiffEditState {
   const changes = blockDiff(originalDoc, modifiedDoc);
-  console.log("blockDiff result:", JSON.stringify(changes, null, 2));
   const { root, mergeGroups } = buildVNode(changes);
   const mergedDoc = buildNodeFromVNode(root, schema);
 
