@@ -6,7 +6,7 @@ Block-level Markdown diff and merge controls for Milkdown editors.
 
 ## Overview
 
-`@milkdown/plugin-inline-diff` compares Markdown documents as block structures instead of raw text lines. It is designed for in-editor review flows where users need to inspect and merge changes without leaving the editor.
+`@woshizhangbin33/plugin-inline-diff` compares Markdown documents as block structures instead of raw text lines. It is designed for in-editor review flows where users need to inspect and merge changes without leaving the editor.
 
 It works well for:
 
