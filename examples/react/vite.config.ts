@@ -7,13 +7,13 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: "@woshizhangbin33/plugin-inline-diff/style.css",
+        find: "milkdown-inline-diff/style.css",
         replacement: fileURLToPath(
           new URL("../../src/style.css", import.meta.url),
         ),
       },
       {
-        find: "@woshizhangbin33/plugin-inline-diff",
+        find: "milkdown-inline-diff",
         replacement: fileURLToPath(
           new URL("../../src/index.ts", import.meta.url),
         ),

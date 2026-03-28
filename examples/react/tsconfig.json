@@ -18,10 +18,10 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@woshizhangbin33/plugin-inline-diff": [
+      "milkdown-inline-diff": [
         "../../src/index.ts"
       ],
-      "@woshizhangbin33/plugin-inline-diff/style.css": [
+      "milkdown-inline-diff/style.css": [
         "../../src/style.css"
       ]
     }

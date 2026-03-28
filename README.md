@@ -1,12 +1,15 @@
-# @woshizhangbin33/plugin-inline-diff
+# milkdown-inline-diff
 
 Block-level Markdown diff and merge controls for Milkdown editors.
+
+
+[GitHub](https://github.com/woshizhangbin/milkdown-inline-diff)
 
 ![milkdown-inline-diff demo](./docs/demo-page.png)
 
 ## Overview
 
-`@woshizhangbin33/plugin-inline-diff` compares Markdown documents as block structures instead of raw text lines. It is designed for in-editor review flows where users need to inspect and merge changes without leaving the editor.
+`milkdown-inline-diff` compares Markdown documents as block structures instead of raw text lines. It is designed for in-editor review flows where users need to inspect and merge changes without leaving the editor.
 
 It works well for:
 
@@ -22,7 +25,7 @@ It works well for:
 ## Installation
 
 ```bash
-pnpm add @woshizhangbin33/plugin-inline-diff
+pnpm add milkdown-inline-diff
 ```
 
 You also need the normal Milkdown editor dependencies used by your app.
@@ -35,8 +38,8 @@ import { commonmark } from "@milkdown/preset-commonmark";
 import {
   diffConfig,
   diffPlugins,
-} from "@woshizhangbin33/plugin-inline-diff";
-import "@woshizhangbin33/plugin-inline-diff/style.css";
+} from "milkdown-inline-diff";
+import "milkdown-inline-diff/style.css";
 
 const editor = Editor.make()
   .use(commonmark)
@@ -197,7 +200,7 @@ It demonstrates:
 Import the plugin stylesheet once:
 
 ```ts
-import "@woshizhangbin33/plugin-inline-diff/style.css";
+import "milkdown-inline-diff/style.css";
 ```
 
 You can then override the tooltip and review UI styles in your app theme if needed.

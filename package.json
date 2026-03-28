@@ -1,6 +1,6 @@
 {
-  "name": "@woshizhangbin33/plugin-inline-diff",
-  "version": "1.0.1",
+  "name": "milkdown-inline-diff",
+  "version": "1.0.2",
   "description": "A Milkdown plugin for inline diff visualization and merge functionality",
   "keywords": [
     "milkdown",
@@ -11,6 +11,10 @@
   ],
   "author": "张斌",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/woshizhangbin/milkdown-inline-diff"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
